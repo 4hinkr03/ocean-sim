@@ -1,14 +1,13 @@
 package simulator;
 
-import java.awt.BorderLayout;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.JTable;
+import model.Agent;
+import model.Environment;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
+import java.awt.*;
 
 /**
  *
@@ -16,7 +15,8 @@ import javax.swing.table.TableColumn;
  */
 public class SimulatorGui extends JFrame {
 
-    public SimulatorGui() {
+    public SimulatorGui(Environment e) {
+        setEnvironment(e);
         initGui();
         initComponents();
     }
@@ -63,6 +63,26 @@ public class SimulatorGui extends JFrame {
         controlsPanel.add(new JLabel("Fast"));
 
         this.add(controlsPanel, BorderLayout.SOUTH);
+
+       startButton.addActionListener(a -> {
+            running = true;
+            stepping = false;
+        });
+        stopButton.addActionListener(a -> {
+            running = false;
+            stepping = false;
+        });
+        resetButton.addActionListener(a -> {
+            environment.reset();
+            running = true;
+            stepping = false;
+        });
+        stepButton.addActionListener(a -> {
+            running = true;
+            stepping = true;
+        });
+
+        speedSlider.addChangeListener( c -> environment.setSpeed(speedSlider.getValue()));
     }
 
     private void initWorld() {
@@ -70,15 +90,35 @@ public class SimulatorGui extends JFrame {
         world = new JTable(model);
         world.setEnabled(false);
 
+        AgentCellRenderer renderer = new AgentCellRenderer(environment);
+
         for (int col = 0; col < SimulatorConstants.WORLD_WIDTH; col++) {
             TableColumn column = world.getColumnModel().getColumn(col);
             column.setMinWidth(SimulatorConstants.WORLD_CELL_SIZE);
             column.setMaxWidth(SimulatorConstants.WORLD_CELL_SIZE);
+            world.setDefaultRenderer(world.getColumnClass(col), renderer);
         }
 
         JPanel worldPanel = new JPanel();
         worldPanel.add(world);
         this.add(worldPanel, BorderLayout.CENTER);
+
+    }
+
+    public void cycleEnvironment() {
+        while(true) {
+            if(running) {
+                environment.addNewAgents();
+                environment.clearDeadAgents();
+                environment.actAgents();
+                repaint();
+                environment.sleep();
+
+                if(stepping) {
+                    running = false;
+                }
+            }
+        }
     }
 
     private JButton startButton;
@@ -87,4 +127,38 @@ public class SimulatorGui extends JFrame {
     private JButton resetButton;
     private JSlider speedSlider;
     private JTable world;
+    private Environment environment;
+    private boolean running = true, stepping = false;
+
+    public void setEnvironment(Environment e) {
+        this.environment = e;
+    }
+
+   public class AgentCellRenderer extends DefaultTableCellRenderer {
+
+        private Agent agent = null;
+        private Environment e;
+
+        public AgentCellRenderer(Environment e) {
+            this.e = e;
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+                                                       int row, int column) {
+            JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            Agent a = e.getAgent(row, column);
+
+            if(a != null && a.isAlive() && a.getLocation().equals(row, column)) {
+                label.setBackground(a.getColor());
+            } else {
+                label.setBackground(Color.BLUE);
+            }
+            return label;
+        }
+
+        public void setAgent(Agent agent) {
+            this.agent = agent;
+        }
+    }
 }

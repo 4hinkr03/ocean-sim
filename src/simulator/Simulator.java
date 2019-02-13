@@ -5,6 +5,8 @@
  */
 package simulator;
 
+import model.Environment;
+
 /**
  *
  * @author Prins
@@ -12,7 +14,8 @@ package simulator;
 public class Simulator {
     
     public static void main(String[] args) {
-        SimulatorGui gui = new SimulatorGui();
+        SimulatorGui gui = new SimulatorGui(new Environment());
         gui.showGui();
+        gui.cycleEnvironment();
     }
 }

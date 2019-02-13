@@ -4,8 +4,9 @@ public class Location {
 
 	private int x, y;
 
-	public Location() {
-		
+	public Location(int x, int y) {
+		this.x = x;
+		this.y = y;
 	}
 	
 	public int getX() {
@@ -24,18 +25,16 @@ public class Location {
 		this.y = y;
 	}
 	
-	public void updateLocation(int x, int y) {
-		if(canMoveTo(x, y)) {
-			setX(x);
-			setY(y);
-		}
+	public void update(Location location) {
+		setX(location.getX());
+		setY(location.getY());
 	}
-	
-	private boolean canMoveTo(int x, int y) {
-		int diffX = getX() + x;
-		int diffY = getY() + y;
-		return Math.abs(diffX) <= 1 &&
-				Math.abs(diffY) <= 1;
+	public boolean equals(int x, int y) {
+		return this.x == x && this.y == y;
 	}
-	
+
+	@Override
+	public String toString() {
+		return "[Location: x=" + getX() + ", y=" + getY() + "]";
+	}
 }
